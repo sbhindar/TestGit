@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<vxml xmlns="http://www.w3.org/2001/vxml" version="2.0">
+  <!-- Simple VXML Application that tests bridge transfer and termination conditions -->
+  <!-- Copyright 2004 Comverse, Inc.  All rights reserved. -->
+
+  <catch event="nomatch">
+    <log> nomatch event </log>
+    <exit/>
+  </catch>
+
+  <catch event="noinput">
+    <log> noinput event </log>
+    <exit/>
+  </catch>
+
+  <form>
+    <block>
+      <prompt>
+        <audio src="/qa/prompts/audio/audio_bridge_txfr_begin.wav"/>
+      </prompt>
+    </block>
+
+    <transfer name="theCall" dest="sip:2633" bridge="true" connecttimeout="30s" maxtime="60s">
+
+      <grammar type="application/x-jsgf" mode="dtmf"> 1 | 2 | 3 | 4 | 5 | 6 | 7 |8 | 9  </grammar>
+
+     <filled>
+       <log>transfer returned: <value expr="theCall"/></log>
+       <if cond="theCall == 'busy'">
+         <log>The line was busy. Please try again later.</log>
+         <prompt> <audio src="/qa/prompts/audio/audio_bridge_txfr_end.wav"/></prompt>
+       <elseif cond="theCall == 'noanswer'" />
+         <log>None is answering.</log>
+         <prompt> <audio src="/qa/prompts/audio/audio_bridge_txfr_end.wav"/></prompt>
+       <elseif cond="theCall == 'network_busy'" />
+         <log>The network is busy!</log>
+         <prompt> <audio src="/qa/prompts/audio/audio_bridge_txfr_end.wav"/></prompt>
+       <elseif cond="theCall == 'near_end_disconnect'" />
+         <log>The call was completed, and you terminated it with dtmf input.</log>
+         <prompt> <audio src="/qa/prompts/audio/audio_bridge_txfr_end.wav"/> </prompt>
+       <elseif cond="theCall == 'far_end_disconnect'" />
+         <log>The call was completed, and the callee terminated it.</log>
+         <prompt> <audio src="/qa/prompts/audio/audio_bridge_txfr_end.wav"/></prompt>
+       <elseif cond="theCall == 'maxtime_disconnect'" />
+         <log>The call was completed, and it exceeded the maximum time allowed.</log>
+       <elseif cond="theCall == 'network_disconnect'" />
+         <log>The call was completed, but it was terminated by the network.</log>
+       </if>
+    </filled>
+   </transfer>
+
+   <block>
+     <log>The call lasted approximately
+       <value expr="theCall$.duration"/> seconds.
+     </log>
+    <prompt> <audio src="/qa/prompts/audio/goodbye.wav"/></prompt>
+     <exit/>
+   </block>
+
+</form>
+</vxml>
+
+
